@@ -13,13 +13,31 @@
 namespace erim::star{
 #endif
 
-template<auto& table,typename Idx,unsigned qtd=1>
+template<auto& table,typename Idx_t,unsigned qtd=1>
 struct Link{  
-  Idx keys[qtd];
+  Idx_t keys[qtd];
   decltype(*table)& operator[](auto i=0){
     return table[keys[i]]; //unsafe
   }
 }
+
+template<auto& chain_table, auto& table, typename Idx_t, typename Chain_Idx_t = Idx_t>
+struct Chain {  
+  Chain_Idx_t previous;
+  Idx_t keys[];
+
+  static constexpr unsigned qtd = (sizeof(decltype(*chain_table))
+- sizeof(Chain_Idx_t))/sizeof(Idx_t));
+
+  decltype(*table)& operator[](auto i=0){
+    if(i>=qtd)
+      return (Chain*)(&(chain_table[previous]))[0][i-qtd];
+    return table[keys[i]]; //unsafe
+  }
+}
+
+chain<block32,long,movies,int>
+
 
 #ifdef USE_ERIM_NAMESPACE
 }
