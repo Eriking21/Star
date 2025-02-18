@@ -32,7 +32,7 @@ struct Chain {
   decltype(*table)& operator[](auto i=0){
     if(i>=qtd)
       return (Chain*)(&(chain_table[previous]))[0][i-qtd];
-    return table[keys[i]]; //unsafe
+    return table[keys[i]];
   }
 }
 
