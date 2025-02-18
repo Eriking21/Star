@@ -30,9 +30,8 @@ struct Chain {
 - sizeof(Chain_Idx_t))/sizeof(Idx_t));
 
   decltype(*table)& operator[](auto i=0){
-    if(i>=qtd)
-      return (Chain*)(&(chain_table[previous]))[0][i-qtd];
-    return table[keys[i]];
+    if(i<qtd)return table[keys[i]];
+    return (Chain*)(&(chain_table[previous]))[0][i-qtd]; //unsafe
   }
 }
 
