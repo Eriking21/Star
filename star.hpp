@@ -16,7 +16,7 @@ namespace erim::star{
 template<auto& table,typename Idx_t,unsigned qtd=1>
 struct Link{  
   Idx_t keys[qtd];
-  decltype(*table)& operator[](auto i=0){
+  constexpr decltype(*table)& operator[](auto i=0){
     return table[keys[i]]; //unsafe
   }
 }
@@ -29,7 +29,7 @@ struct Chain {
   static constexpr unsigned qtd = (sizeof(decltype(*chain_table))
 - sizeof(Chain_Idx_t))/sizeof(Idx_t));
 
-  decltype(*table)& operator[](auto i=0){
+  constexpr decltype(*table)& operator[](auto i=0){
    for ( Chain* c = this;true; i-=qtd){
       c = (Chain*)&chain_table[c->prev];
       if (i<qtd) return table[c->keys[i]];
