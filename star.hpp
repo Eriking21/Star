@@ -6,7 +6,7 @@
 #pragma once
 
 #ifndef mk_table
-#define mk_table(NAME) struct NAME##_Format* NAME;
+#define mk_table(NAME) struct NAME##_Format* NAME
 #endif
 
 #ifdef EXPORT_ERIM_NAMESPACE
