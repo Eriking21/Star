@@ -30,11 +30,9 @@ struct Chain {
 - sizeof(Chain_Idx_t))/sizeof(Idx_t));
 
   decltype(*table)& operator[](auto i=0){
-   Chain* c = this;
-   while(true){
+   for ( Chain* c = this;true; i-=qtd){
       c = (Chain*)&chain_table[c->prev];
       if (i<qtd) return table[c->keys[i]];
-      i -= qtd;
   }
 }
 
