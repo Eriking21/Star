@@ -36,9 +36,11 @@ struct Chain {
   }
 }
 
-
-Chain<Block32,Movies,int,int> movies;
-
+/**
+ * @examples
+ * Chain<Block32,Movies,int,long> movies;
+ * Link<Movies,int,4> movies;
+**/
 #ifdef USE_ERIM_NAMESPACE
 }
 #endif
