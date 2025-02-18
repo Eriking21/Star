@@ -13,11 +13,11 @@
 namespace erim::star{
 #endif
 
-template<auto& vector,typename Idx,unsigned qtd=1>
+template<auto& table,typename Idx,unsigned qtd=1>
 struct Link{  
   Idx keys[qtd];
-  decltype(*vector)& operator[](auto i=0){
-    return vector[keys[i]]; //unsafe
+  decltype(*table)& operator[](auto i=0){
+    return table[keys[i]]; //unsafe
   }
 }
 
