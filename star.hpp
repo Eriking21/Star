@@ -23,7 +23,7 @@ struct Link{
 
 template<auto& chain_table, auto& table, typename Idx_t, typename Chain_Idx_t = Idx_t>
 struct Chain {  
-  Chain_Idx_t previous;
+  Chain_Idx_t prev;
   Idx_t keys[];
 
   static constexpr unsigned qtd = (sizeof(decltype(*chain_table))
@@ -31,12 +31,11 @@ struct Chain {
 
   decltype(*table)& operator[](auto i=0){
    Chain* c = this;
-   do {
-      c = (Chain*)&chain_table[c.previous];
-      if (i<qtd)
-        return table[c->keys[i]];
-      i-=qtd;
-  } while (true);
+   while(true){
+      c = (Chain*)&chain_table[c->prev];
+      if (i<qtd) return table[c->keys[i]];
+      i -= qtd;
+  }
 }
 
 chain<block32,long,movies,int>
