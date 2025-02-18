@@ -36,8 +36,6 @@ struct Chain {
   }
 }
 
-chain<block32,long,movies,int>
-
 
 #ifdef USE_ERIM_NAMESPACE
 }
