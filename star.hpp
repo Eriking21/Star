@@ -5,28 +5,14 @@
 
 #pragma once
 
-<<<<<<< HEAD
 #ifndef mk_table 
 //// @note create a Table (pointer to a list of items sharing same Format).
 #define mk_table(NAME)struct NAME##_Format* NAME
 #endif
 
 #ifndef mk_tables
-#include "macro_for_each_100"
+#include "for_each.hpp"
 #define mk_tables(NAMES...) FOR_EACH(mk_table, NAMES)
-=======
-#ifndef EVAL
-#    define EVAL0(...) __VA_ARGS__
-#    define EVAL1(...) EVAL0(EVAL0(EVAL0(__VA_ARGS__)))
-#    define EVAL2(...) EVAL1(EVAL1(EVAL1(__VA_ARGS__)))
-#    define EVAL3(...) EVAL2(EVAL2(EVAL2(__VA_ARGS__)))
-#    define EVAL(...)  EVAL3(EVAL3(EVAL3(__VA_ARGS__)))
-#endif
-
-#ifndef mk_table
-//// @note create a Table (pointer to a list of items sharing same Format).
-#    define mk_table(NAME) struct NAME##_Format *NAME
->>>>>>> c872b07 (Eval intro)
 #endif
 
 #ifdef EXPORT_ERIM_NAMESPACE
