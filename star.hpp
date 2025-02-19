@@ -6,42 +6,52 @@
 #pragma once
 
 #ifndef mk_table
-#define mk_table(NAME) struct NAME##_Format* NAME
+//// @note create a Table (pointer to a list of items sharing same Format).
+#define mk_table(NAME) struct NAME##_Format *NAME
 #endif
 
 #ifdef EXPORT_ERIM_NAMESPACE
-namespace erim::star{
+namespace erim::star {
 #endif
 
-template<auto& table,typename Idx_t,unsigned qtd=1>
-struct Link{  
-  Idx_t keys[qtd];
-  constexpr decltype(*table)& operator[](auto i=0){
-    return table[keys[i]]; //unsafe
-  }
-}
+template <typename U, auto MaxSize>
+concept type_smaller_than = sizeof(U) <= MaxSize;
 
-template<auto& chain_table, auto& table, typename Idx_t, typename Chain_Idx_t = Idx_t>
-struct Chain {  
-  Chain_Idx_t prev;
-  Idx_t keys[];
+template <auto &table, typename Index_t, unsigned Number_of_Indexes = 1>
+struct Link {
+    Index_t keys[Number_of_Indexes];
 
-  static constexpr unsigned qtd = (sizeof(decltype(*chain_table))
-- sizeof(Chain_Idx_t))/sizeof(Idx_t));
+    typedef Index_t key_t;
+    typedef decltype(*table) data_t;
+    static constexpr auto key_size = sizeof(key_t);
+    static constexpr auto data_size = sizeof(data_t);
+    static constexpr auto number_of_keys = Number_of_Indexes;
 
-  constexpr decltype(*table)& operator[](auto i=0){
-   for ( Chain* c = this;true; i-=qtd){
-      c = (Chain*)&chain_table[c->prev];
-      if (i<qtd) return table[c->keys[i]];
-  }
-}
+    constexpr data_t &operator[](auto i) { return table[keys[i]]; }
+};
+
+template <auto &table, typename Index_t, typename link_t>
+
+struct Chain : link_t {
+    Index_t sub_keys[];
+
+    using link_t::data_size;
+    using link_t::key_size;
+    using typename link_t::data_t;
+    static constexpr auto qtd = (data_size - key_size) / sizeof(sub_keys);
+    static_assert(link_t::number_of_keys == 1);
+
+    constexpr data_t &operator[](auto i) {
+        for (Chain *c = this->link_t[0]; true; i -= qtd, c = c->link_t[0])
+            if (i < qtd) return table[c->sub_keys[i]];
+    }
+};
 
 /**
  * @examples
  * Chain<Block32,Movies,int,long> movies;
  * Link<Movies,int,4> movies;
-**/
-#ifdef USE_ERIM_NAMESPACE
+ **/
+#ifdef EXPORT_ERIM_NAMESPACE
 }
 #endif
-
