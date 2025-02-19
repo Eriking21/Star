@@ -1,4 +1,4 @@
-#ifdef EXPORT_ERIM_NAMESPACE
+#ifdef REQUIRES_ERIM_NAMESPACE
 namespace erim{
 #endif
 
@@ -8,6 +8,6 @@ namespace erim{
 
 
 
-#ifdef EXPORT_ERIM_NAMESPACE
+#ifdef REQUIRES_ERIM_NAMESPACE
 }
 #endif

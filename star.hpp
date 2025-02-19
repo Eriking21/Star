@@ -15,7 +15,7 @@
 #define mk_tables(NAMES...) FOR_EACH(mk_table, NAMES)
 #endif
 
-#ifdef EXPORT_ERIM_NAMESPACE
+#ifdef REQUIRES_ERIM_NAMESPACE
 namespace erim::star {
 #endif
 
@@ -53,6 +53,6 @@ struct Chain : link_t {
     }
 };
 
-#ifdef EXPORT_ERIM_NAMESPACE
+#ifdef REQUIRES_ERIM_NAMESPACE
 }
 #endif
