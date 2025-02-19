@@ -1,1 +1,6 @@
+/.vscode/
+/.cache*
 /build/
+/trash/
+/local/
+.env*

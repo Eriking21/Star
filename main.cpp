@@ -1,5 +1,5 @@
 #include "star.hpp"
-
-int main(int, char**){
-    //std::cout << "Hello, from star!\n";
+mk_table(Users);
+int main(int, char**) {
+    // std::cout << "Hello, from star!\n";
 }

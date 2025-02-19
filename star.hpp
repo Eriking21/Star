@@ -5,6 +5,7 @@
 
 #pragma once
 
+<<<<<<< HEAD
 #ifndef mk_table 
 //// @note create a Table (pointer to a list of items sharing same Format).
 #define mk_table(NAME)struct NAME##_Format* NAME
@@ -13,6 +14,19 @@
 #ifndef mk_tables
 #include "macro_for_each_100"
 #define mk_tables(NAMES...) FOR_EACH(mk_table, NAMES)
+=======
+#ifndef EVAL
+#    define EVAL0(...) __VA_ARGS__
+#    define EVAL1(...) EVAL0(EVAL0(EVAL0(__VA_ARGS__)))
+#    define EVAL2(...) EVAL1(EVAL1(EVAL1(__VA_ARGS__)))
+#    define EVAL3(...) EVAL2(EVAL2(EVAL2(__VA_ARGS__)))
+#    define EVAL(...)  EVAL3(EVAL3(EVAL3(__VA_ARGS__)))
+#endif
+
+#ifndef mk_table
+//// @note create a Table (pointer to a list of items sharing same Format).
+#    define mk_table(NAME) struct NAME##_Format *NAME
+>>>>>>> c872b07 (Eval intro)
 #endif
 
 #ifdef EXPORT_ERIM_NAMESPACE
@@ -47,8 +61,9 @@ struct Chain : link_t {
     static_assert(link_t::number_of_keys == 1);
 
     constexpr data_t &operator[](auto i) {
-        for (Chain *c = this->link_t[0]; true; i -= qtd, c = c->link_t[0])
-            if (i < qtd) return table[c->sub_keys[i]];
+        Chain *c = *(Chain *)(&this->link_t[0]);
+        while (i >= qtd) c = *(Chain *)(&c->link_t[0]);
+        return table[c->sub_keys[i]];
     }
 };
 
