@@ -7,13 +7,12 @@
 
 #ifndef mk_table 
 //// @note create a Table (pointer to a list of items sharing same Format).
-#define mk_table(NAME) struct NAME##_Format *NAME
+#define mk_table(NAME)struct NAME##_Format* NAME
 #endif
 
 #ifndef mk_tables
 #include "macro_for_each_100"
 #define mk_tables(NAMES...) FOR_EACH(mk_table, NAMES)
-mk_tables();
 #endif
 
 #ifdef EXPORT_ERIM_NAMESPACE
