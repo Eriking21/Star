@@ -6,12 +6,12 @@
 #pragma once
 
 #ifndef mk_table 
-//// @note create a Table (pointer to a list of items sharing same Format).
+/** @note create a Table (pointer to a list of items sharing same Format). **/
 #define mk_table(NAME)struct NAME##_Format* NAME
 #endif
 
 #ifndef mk_tables
-#include "for_each.hpp"
+#include "macro_for_each.hpp"
 #define mk_tables(NAMES...) FOR_EACH(mk_table, NAMES)
 #endif
 
@@ -53,11 +53,6 @@ struct Chain : link_t {
     }
 };
 
-/**
- * @examples
- * Chain<Block32,Movies,int,long> movies;
- * Link<Movies,int,4> movies;
- **/
 #ifdef EXPORT_ERIM_NAMESPACE
 }
 #endif

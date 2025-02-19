@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 //#pragma once
 #define CONCATENATE(x, y) x##y
 #define EXPAND(...) __VA_ARGS__
@@ -328,6 +329,10 @@
 #define mk_tables(NAMES...) FOR_EACH(mk_table, NAMES)
 mk_tables(a, u, i, op, af, ujv, eyda, thb, fgbi);
 
+=======
+#include "star.hpp"
+mk_tables(Users,MOvies);
+>>>>>>> bed46e5 (	modified:   main.cpp)
 int main(int, char**) {
     // std::cout << "Hello, from star!\n";
 }
