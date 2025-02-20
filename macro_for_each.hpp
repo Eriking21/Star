@@ -7,17 +7,20 @@
 #define FOR_EACH__(N, FUNC, PARAMS...) CONCATENATE(FOR_EACH, N)(FUNC, PARAMS)
 #define FOR_EACH(FUNC, PARAMS...) FOR_EACH__(FOR_EACH_(PARAMS), FUNC, PARAMS)
 
-#define FOR_EACH__0(FUNC)
-#define FOR_EACH__1(FUNC, ...) __VA_OPT__(FUNC(__VA_ARGS__))
-#define FOR_EACH__2(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__1(FUNC, yS)
-#define FOR_EACH__3(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__2(FUNC, yS)
-#define FOR_EACH__4(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__3(FUNC, yS)
-#define FOR_EACH__5(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__4(FUNC, yS)
-#define FOR_EACH__6(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__5(FUNC, yS)
-#define FOR_EACH__7(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__6(FUNC, yS)
-#define FOR_EACH__8(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__7(FUNC, yS)
-#define FOR_EACH__9(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__8(FUNC, yS)
-#define FOR_EACH__10(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__9(FUNC, yS)
+#if __cplusplus >= 20202L
+#define FOR_EACH__01(FUNC, ...) __VA_OPT__(FUNC(__VA_ARGS__))
+#else
+#define FOR_EACH__01(FUNC, yS...) FUNC(yS) // yS cannot be empty
+#endif
+#define FOR_EACH__02(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__01(FUNC, yS)
+#define FOR_EACH__03(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__02(FUNC, yS)
+#define FOR_EACH__04(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__03(FUNC, yS)
+#define FOR_EACH__05(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__04(FUNC, yS)
+#define FOR_EACH__06(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__05(FUNC, yS)
+#define FOR_EACH__07(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__06(FUNC, yS)
+#define FOR_EACH__08(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__07(FUNC, yS)
+#define FOR_EACH__09(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__08(FUNC, yS)
+#define FOR_EACH__10(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__09(FUNC, yS)
 #define FOR_EACH__11(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__10(FUNC, yS)
 #define FOR_EACH__12(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__11(FUNC, yS)
 #define FOR_EACH__13(FUNC, x, yS...) FUNC(x) THEN FOR_EACH__12(FUNC, yS)
@@ -117,8 +120,8 @@
     __52, __51, __50, __49, __48, __47, __46, __45, __44, __43, __42, __41,    \
     __40, __39, __38, __37, __36, __35, __34, __33, __32, __31, __30, __29,    \
     __28, __27, __26, __25, __24, __23, __22, __21, __20, __19, __18, __17,    \
-    __16, __15, __14, __13, __12, __11, __10, __9, __8, __7, __6, __5, __4,    \
-    __3, __2, __1, Num, ...)                                                   \
+    __16, __15, __14, __13, __12, __11, __10, __09, __08, __07, __06, __05,    \
+    __04, __03, __02, __01, Num, ...)                                          \
   Num
 #define FOR_EACH_N                                                             \
   __100, __99, __98, __97, __96, __95, __94, __93, __92, __91, __90, __89,     \
@@ -128,5 +131,5 @@
       __52, __51, __50, __49, __48, __47, __46, __45, __44, __43, __42, __41,  \
       __40, __39, __38, __37, __36, __35, __34, __33, __32, __31, __30, __29,  \
       __28, __27, __26, __25, __24, __23, __22, __21, __20, __19, __18, __17,  \
-      __16, __15, __14, __13, __12, __11, __10, __9, __8, __7, __6, __5, __4,  \
-      __3, __2, __1
+      __16, __15, __14, __13, __12, __11, __10, __09, __08, __07, __06, __05,  \
+      __04, __03, __02, __01,

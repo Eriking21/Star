@@ -1,7 +1,16 @@
 // #pragma once
+#include "iostream"
 #include "star.hpp"
-mk_tables(a, u, i, op, af, ujv, eyda, thb, fgbi);
+mk_tables(Users, Movies);
 
-int main(int, char **) {
-  // std::cout << "Hello, from star!\n";
-}
+struct Users_Format {
+  Chain<Movies, int, Link<global_table<32>, int>> watcheds;
+  //Chain<Movies, int, Link<global_table<32>, int>> publisheds;
+
+};
+
+struct Movies_Format {
+  Chain<Users, int, Link<global_table<32>, int>> watchers;
+};
+
+int main(int, char **) { std::cout << "erim\n"; }

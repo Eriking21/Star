@@ -1,5 +1,5 @@
-#ifdef REQUIRES_ERIM_NAMESPACE
-namespace erim{
+#ifdef ERIM_INDEX_NAMESPACE
+namespace ERIM_INDEX_NAMESPACE{
 #endif
 
 
@@ -8,6 +8,6 @@ namespace erim{
 
 
 
-#ifdef REQUIRES_ERIM_NAMESPACE
+#ifdef ERIM_INDEX_NAMESPACE
 }
 #endif

@@ -5,9 +5,15 @@
 
 #pragma once
 
-#ifndef mk_table 
+#ifndef mk_table
 /** @note create a Table (pointer to a list of items sharing same Format). **/
-#define mk_table(NAME)struct NAME##_Format* NAME
+#define mk_table(NAME) struct NAME##_Format *NAME
+#endif
+
+#ifdef ERIM_STAR_NAMESPACE
+/// To block collisions and to allow suitable aliasing of those structs
+/// TO Encript wrap Index_t with class with integral cast operator.
+namespace ERIM_STAR_NAMESPACE {
 #endif
 
 #ifndef mk_tables
@@ -15,44 +21,46 @@
 #define mk_tables(NAMES...) FOR_EACH(mk_table, NAMES)
 #endif
 
-#ifdef REQUIRES_ERIM_NAMESPACE
-namespace erim::star {
-#endif
+template <auto line_bytes, auto... diffs> char global_table[line_bytes];
 
-template <typename U, auto MaxSize>
-concept type_smaller_than = sizeof(U) <= MaxSize;
-
-template <auto &table, typename Index_t, unsigned Number_of_Indexes = 1>
+template <auto &table, typename Idx_t, unsigned Count = 0, unsigned Pad = 0>
 struct Link {
-    Index_t keys[Number_of_Indexes];
+  using key_t = Idx_t;
+  using data_t = decltype(*table);
+  static constexpr auto key_count = Count ? Count : 1;
+  static constexpr auto key_size = sizeof(key_t);
+  static constexpr auto link_size = key_size * key_count + Pad;
+  static constexpr auto link_table = table;
 
-    typedef Index_t key_t;
-    typedef decltype(*table) data_t;
-    static constexpr auto key_size = sizeof(key_t);
-    static constexpr auto data_size = sizeof(data_t);
-    static constexpr auto number_of_keys = Number_of_Indexes;
+  template <unsigned C = Count> using COUNT_to = Link<table, Idx_t, C, Pad>;
 
-    constexpr data_t &operator[](auto i) { return table[keys[i]]; }
+  Idx_t keys[key_count];
+  char padding[Pad];
+  constexpr data_t &operator[](auto i) { return table[keys[i]]; }
+} __attribute__((packed));
+
+template <auto &table, typename Idx_t, class link_t, class L = link_t::data_t>
+struct Chain : private link_t {
+
+  using data_t = decltype(*table);
+  using key_t = typename link_t::key_t;
+  using link_t::key_size;
+  using link_t::link_size;
+  static constexpr auto sub_key_size = sizeof(Idx_t);
+  static constexpr auto sub_key_count = (sizeof(L) - link_size) / sub_key_size;
+
+  struct Line : link_t {
+    Idx_t sub_keys[sub_key_count];
+  } __attribute__((packed));
+
+  //   constexpr data_t &operator[](auto i) {
+  //     Line *c = *(Line *)(&this->link_t[0]);
+  //     while (i >= sub_key_count)
+  //       c = *(Line *)(&c->link_t[0]);
+  //     return table[c->sub_keys[i]];
+  //   }
 };
 
-template <auto &table, typename Index_t, typename link_t>
-
-struct Chain : link_t {
-    Index_t sub_keys[];
-
-    using link_t::data_size;
-    using link_t::key_size;
-    using typename link_t::data_t;
-    static constexpr auto qtd = (data_size - key_size) / sizeof(sub_keys);
-    static_assert(link_t::number_of_keys == 1);
-
-    constexpr data_t &operator[](auto i) {
-        Chain *c = *(Chain *)(&this->link_t[0]);
-        while (i >= qtd) c = *(Chain *)(&c->link_t[0]);
-        return table[c->sub_keys[i]];
-    }
-};
-
-#ifdef REQUIRES_ERIM_NAMESPACE
+#ifdef ERIM_STAR_NAMESPACE
 }
 #endif
