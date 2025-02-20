@@ -1,16 +1,24 @@
 // #pragma once
 #include "iostream"
-#include "star.hpp"
-mk_tables(Users, Movies);
+#include "link.hpp"
+mk_tables(Users, Movies, hot);
 
 struct Users_Format {
-  Chain<Movies, int, Link<global_table<32>, int>> watcheds;
-  //Chain<Movies, int, Link<global_table<32>, int>> publisheds;
+    Link<Movies, int[14]> watched;
+    // Chain<Movies, int, Link<global_table<32>, int>> watcheds;
+    // Chain<Movies, int, Link<global_table<32>, int>> publisheds;
+};
 
+struct hot_Format {
+    char d[100];
 };
 
 struct Movies_Format {
-  Chain<Users, int, Link<global_table<32>, int>> watchers;
+    Link<Movies, int[4],long> watched;
+
+    // Link<Chain<int, int, hot>,Users> watched;
+    // Link<Chain<int, int, hot>,7,Users> wathed;
+    // Chain<int, int, hot> watched;
 };
 
 int main(int, char **) { std::cout << "erim\n"; }

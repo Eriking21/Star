@@ -21,10 +21,6 @@ namespace ERIM_LINK_NAMESPACE {
 #define mk_tables(NAMES...) FOR_EACH(mk_table, NAMES)
 #endif
 
-template <typename U> class Box {
-    U secret;
-} __attribute__((packed));
-
 /**
  *
  *                          Link
@@ -33,78 +29,55 @@ template <typename U> class Box {
  * @param last  is a reference to a Table (static/global Pointer to an Array)
  * @param before_last add optional padding to indent the struct
  **/
-template <class Key_Cls, auto A, auto... B>
-    requires(sizeof...(B) <= 1)
+template <typename T, auto...>
+struct Box {
+    T data;
+    using type = T;
+    constexpr operator auto &() { return data; }
+} __attribute__((packed));
+
+template <typename Keys_t>
+concept __Indexable = requires(Keys_t keys_v) { keys_v[0]; };
+template <typename T>
+concept __Indexable_with_keys = requires(T v) { v.*T::keys, T::count, v[0]; };
+template <typename T>
+concept __Index_with_key = requires(T key_v, T k[2]) { k[key_v.*T::key]; };
+
+template <auto *(&Table_v), __Indexable Keys_t, class... chain_t>
 struct Link;
 
-template <class KEYS, auto &TABLE, auto Pad>
-struct Link<KEYS, Pad, TABLE> : Box<char[Pad]>, Link<KEYS, TABLE> {};
-
-template <class Key_Cls, auto &Table_v>
-struct Link<Key_Cls, Table_v> : Key_Cls {
-
-    using data_t = decltype(*Table_v);
-    constexpr data_t &operator[](auto i) { return Table_v[Link::Key_Cls[i]]; }
-} __attribute__((packed));
-
-template <class Key_t, unsigned Key_Count, auto &Table_v>
-struct Link<Key_t[Key_Count], Table_v> {
-    using key_t = Key_t;
-    using Keys_t = Key_t[Key_Count];
-    using data_t = decltype(*Table_v);
-    static constexpr auto key_size = sizeof(key_t);
-    constexpr data_t &operator[](auto i) { return Table_v[keys[i]]; }
-    Keys_t keys;
-} __attribute__((packed));
-
-/**
- *                          Chain
- *
- * @param first  is the chain key type, represent the chain part
- * @param second is the inner key type, base typr of an array of keys
- * @param last  is a reference to a Table (static/global Pointer to an Array)
- * @param before_last add optional padding to indent the struct
- **/
-template <class Key_t, class SubKey_t, auto A, auto... B>
-    requires(sizeof...(B) <= 1 || ((B * ... * 1) == 0))
-struct Chain;
-
-template <class K1, class K2, auto TABLE>
-struct Chain<K1, K2, TABLE> : Chain<K1, K2, 0, TABLE> {};
-
-template <class K1, class K2, auto PAD, auto &TABLE>
-struct Chain<K1, K2, PAD, TABLE> {
-    static constexpr auto key_count =
-        (sizeof(*TABLE) - sizeof(K1) - PAD) / sizeof(K2);
-    using keys_t = K2[key_count];
-    using line_t = Chain<Box<K1>, keys_t, PAD,
-                         sizeof(*TABLE) - sizeof(K1) - sizeof(keys_t) - PAD>;
-    using main_key_t = K1;
-    K1 main_key;
-    constexpr K2 operator[](auto i) {
-        line_t *line = (line_t *)(TABLE[this->main_key]);
-        while (i >= key_count)
-            line = *(line_t *)(TABLE[line->main_key]), i -= key_count;
-        return line->keys[i];
-    }
-} __attribute__((packed));
-
-template <class K1, class Keys>
-struct Chain<Box<K1>, Keys, 0, 0> {
-    K1 main_key;
-    Keys keys;
-} __attribute__((packed));
-
-template <class K1, class Keys, auto PAD>
-struct Chain<Box<K1>, Keys, PAD, 0> {
-    K1 main_key;
-    char pad[PAD];
-    Keys keys;
-} __attribute__((packed));
-
-template <class K1, class K, auto P, auto R>
-struct Chain<Box<K1>, K, P, R> : Chain<Box<K1>, K, P, 0>, Box<char[R]> {
+template <class Key_t, unsigned Key_Count, auto *(&Table_v)>
+struct Link<Table_v, Key_t[Key_Count]> : Box<Key_t[Key_Count]> {
+    static constexpr auto keys = &Link::template Box<Key_t[Key_Count]>::data;
+    static constexpr auto count = Key_Count;
 };
+
+template <__Indexable Keys_t, class Chain_t, auto *(&Table_v)>
+struct Link<Table_v, Keys_t, Chain_t> : Box<Chain_t> {
+    static constexpr auto key = &Link::template Box<Chain_t>::data;
+};
+
+template <__Indexable_with_keys Keys_t, class T, T *(&Table_v)>
+struct __attribute__((packed)) Link<Table_v, Keys_t> : Keys_t {
+    using data_t = T;
+    constexpr data_t &operator[](auto i) { return Table_v[Link::Keys_t[i]]; }
+};
+
+template <__Indexable_with_keys Keys_t, class T, T *(&Table_v),
+          __Index_with_key Chain_t>
+struct __attribute__((packed)) Link<Table_v, Keys_t, Chain_t> : Chain_t {
+
+    struct __attribute__((packed)) Chain_Format : Chain_t, Keys_t {};
+    static Chain_Format *chain_table;
+
+    constexpr T operator[](auto i) {
+        auto *chain = &chain_table[this->*Chain_t::key];
+        while (i < Keys_t::count)
+            chain = chain_table[chain->key], i -= Keys_t::count;
+        return Table_v[chain->keys[i]];
+    }
+};
+;
 
 #ifdef ERIM_LINK_NAMESPACE
 }
