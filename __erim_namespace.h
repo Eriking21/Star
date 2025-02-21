@@ -1,5 +1,5 @@
-#ifndef ERIM_STAR_NAMESPACE
-#define ERIM_STAR_NAMESPACE erim::star
+#ifndef ERIM_LINK_NAMESPACE
+#define ERIM_LINK_NAMESPACE erim::star
 #endif
 
 #ifndef ERIM_INDEX_NAMESPACE

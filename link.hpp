@@ -1,13 +1,12 @@
+#pragma once
 /**
  * Copyright 2025 Erivaldo Jair Xavier Mate
  * @brief If you cant deal with performance search for "unsafe"
  **/
 
-#pragma once
-
 #ifndef mk_table
-/** @note create a Table (pointer to a list of items sharing same Format). **/
-#define mk_table(NAME) struct NAME##_Format *NAME
+/**  @note create a Table (pointer to a list of items sharing same Format). **/
+#    define mk_table(NAME) struct NAME##_Format *NAME
 #endif
 
 #ifdef ERIM_LINK_NAMESPACE
@@ -17,8 +16,8 @@ namespace ERIM_LINK_NAMESPACE {
 #endif
 
 #ifndef mk_tables
-#include "macro_for_each.hpp"
-#define mk_tables(NAMES...) FOR_EACH(mk_table, NAMES)
+#    include "macro_for_each.hpp"
+#    define mk_tables(NAMES...) FOR_EACH(mk_table, NAMES)
 #endif
 
 /**
@@ -36,35 +35,32 @@ struct Box {
     constexpr operator auto &() { return data; }
 } __attribute__((packed));
 
-template <typename Keys_t>
-concept __Indexable = requires(Keys_t keys_v) { keys_v[0]; };
 template <typename T>
-concept __Indexable_with_keys = requires(T v) { v.*T::keys, T::count, v[0]; };
+concept __Indexable = requires(T v) { v.*T::keys, T::count, v[0]; };
 template <typename T>
 concept __Index_with_key = requires(T key_v, T k[2]) { k[key_v.*T::key]; };
 
-template <auto *(&Table_v), __Indexable Keys_t, class... chain_t>
+template <auto *(&Table_v), class Keys_t, class... chain_t>
 struct Link;
 
 template <class Key_t, unsigned Key_Count, auto *(&Table_v)>
 struct Link<Table_v, Key_t[Key_Count]> : Box<Key_t[Key_Count]> {
-    static constexpr auto keys = &Link::template Box<Key_t[Key_Count]>::data;
+    static constexpr auto Link::*keys = &Box<Key_t[Key_Count]>::data;
     static constexpr auto count = Key_Count;
 };
 
 template <__Indexable Keys_t, class Chain_t, auto *(&Table_v)>
 struct Link<Table_v, Keys_t, Chain_t> : Box<Chain_t> {
-    static constexpr auto key = &Link::template Box<Chain_t>::data;
+    static constexpr auto Link::*key = &Box<Chain_t>::data;
 };
 
-template <__Indexable_with_keys Keys_t, class T, T *(&Table_v)>
+template <__Indexable Keys_t, class T, T *(&Table_v)>
 struct __attribute__((packed)) Link<Table_v, Keys_t> : Keys_t {
     using data_t = T;
     constexpr data_t &operator[](auto i) { return Table_v[Link::Keys_t[i]]; }
 };
 
-template <__Indexable_with_keys Keys_t, class T, T *(&Table_v),
-          __Index_with_key Chain_t>
+template <__Indexable Keys_t, class T, T *(&Table_v), __Index_with_key Chain_t>
 struct __attribute__((packed)) Link<Table_v, Keys_t, Chain_t> : Chain_t {
 
     struct __attribute__((packed)) Chain_Format : Chain_t, Keys_t {};
@@ -77,7 +73,7 @@ struct __attribute__((packed)) Link<Table_v, Keys_t, Chain_t> : Chain_t {
         return Table_v[chain->keys[i]];
     }
 };
-;
+
 
 #ifdef ERIM_LINK_NAMESPACE
 }
