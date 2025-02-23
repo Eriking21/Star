@@ -21,7 +21,6 @@ namespace ERIM_LINK_NAMESPACE {
 #endif
 
 /**
- *
  *                          Link
  *
  * @param first is an array like structure type to index the table
@@ -43,15 +42,15 @@ concept __Index_with_key = requires(T key_v, T k[2]) { k[key_v.*T::key]; };
 template <auto *(&Table_v), class Keys_t, class... chain_t>
 struct Link;
 
-template <class Key_t, unsigned Key_Count, auto *(&Table_v)>
+template <class Key_t, unsigned Key_Count, typename T, T *(&Table_v)>
 struct Link<Table_v, Key_t[Key_Count]> : Box<Key_t[Key_Count]> {
-    static constexpr auto Link::*keys = &Box<Key_t[Key_Count]>::data;
+    static constexpr auto keys = &Box<Key_t[Key_Count]>::data;
     static constexpr auto count = Key_Count;
 };
 
-template <__Indexable Keys_t, class Chain_t, auto *(&Table_v)>
+template <class Keys_t, class Chain_t, typename T, T *(&Table_v)>
 struct Link<Table_v, Keys_t, Chain_t> : Box<Chain_t> {
-    static constexpr auto Link::*key = &Box<Chain_t>::data;
+    static constexpr auto key = &Box<Chain_t>::data;
 };
 
 template <__Indexable Keys_t, class T, T *(&Table_v)>
@@ -73,7 +72,6 @@ struct __attribute__((packed)) Link<Table_v, Keys_t, Chain_t> : Chain_t {
         return Table_v[chain->keys[i]];
     }
 };
-
 
 #ifdef ERIM_LINK_NAMESPACE
 }
