@@ -1,7 +1,7 @@
 #ifndef OPTIONAL
 #define OPTIONAL(X, Y)                                                         \
     ([] {                                                                      \
-        if constexpr (X)                                                       \
+        if constexpr (requires{X;})                                                       \
             return X;                                                          \
         else                                                                   \
             return Y;                                                          \
