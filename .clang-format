@@ -2,3 +2,8 @@ BasedOnStyle: LLVM
 IndentWidth: 4
 BreakTemplateDeclarations: Leave
 IndentPPDirectives: AfterHash
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+UseTab: Never
+CompactNamespaces: true
+AllowShortBlocksOnASingleLine: Always
+AllowShortLoopsOnASingleLine: true

@@ -15,12 +15,19 @@ struct Movies_Format {
     char d[4];
     static constexpr auto entries_count = 50ull;
     static constexpr auto links_count = 4ull;
-    Link<Movies, int[40],long> watched;
+    Link<Movies, int[40], long> watched;
 
     // Link<Chain<int, int, hot>,Users> watched;
     // Link<Chain<int, int, hot>,7,Users> wathed;
     // Chain<int, int, hot> watched;
 };
+Table<hot_Format> k;
 
-//#include <typeinfo>
-int main(int, char **) { std::cout << (char*)Movies.ptr; }
+// #include <typeinfo>
+int main(int, char **) {
+    std::cout << '\n'
+              << (size_t)&Movies[0] << '\n'
+              << (size_t)&hot[0] << '\n'
+              << (size_t)&Users[0] << '\n'
+              << (size_t)&Movies[0];
+}
