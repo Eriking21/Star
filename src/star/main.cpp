@@ -13,8 +13,8 @@ struct hot_Format {};
 
 struct Movies_Format {
     char d[4];
-    static constexpr auto entries_count = 50ull;
-    static constexpr auto links_count = 4ull;
+    static constexpr auto ENTRIES_COUNT = 50ull;
+    static constexpr auto NODES_COUNT = 4ull;
     Link<Movies, int[40], long> watched;
 
     // Link<Chain<int, int, hot>,Users> watched;
@@ -26,8 +26,8 @@ Table<hot_Format> k;
 // #include <typeinfo>
 int main(int, char **) {
     std::cout << '\n'
-              << (size_t)&Movies[0] << '\n'
-              << (size_t)&hot[0] << '\n'
-              << (size_t)&Users[0] << '\n'
-              << (size_t)&Movies[0];
+              << Movies.ptr->info().node_size << '\n'
+              << hot.ptr->info().node_size << '\n'
+              << Users.ptr->info().node_size << '\n'
+              << Movies.ptr->info().node_size << '\n';
 }

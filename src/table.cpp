@@ -31,23 +31,31 @@ static inline T *mmap(const char *path, size_t size) {
 // do not return nullptr exits
 
 TABLE::HEAD::HEAD() : tables{*mmap<List_t>("./Tables", size)} {}
-void TABLE::HEAD::unload(TABLE &) {}
+TABLE::HEAD::~HEAD() {
+    munmap(this, size);
+    std::cout << "HEAD TERMINATED\n";
+}
+
+void TABLE::HEAD::unload(Info **info) const{
+    if (info == nullptr || info[0] == nullptr) return;
+    std::cout << "done\n";
+    munmap(info, info[0][0].node_size);
+}
 
 void *TABLE::HEAD::retrieve_block(void *, unsigned long) { return nullptr; }
 
 void *TABLE::HEAD::load(Named_Info info) {
 
-    std::cout << tables[1].name<<'\n';
-
     Info &table = [&]() -> Info & {
-        std::cout << tables[0].name << '\n';
-        for (Named_Info &table : tables)
+        for (Named_Info &table : tables) {
+            std::cout << table.name << '\n';
             if (!memcmp(table.name, info.name, sizeof(info.name))) return table;
             else if (table.name[0] == 0) return (table = info);
             else {
                 info.list_position++;
                 continue;
             }
+        }
         exit(4);
     }();
     // std::cout << "oi";

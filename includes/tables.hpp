@@ -36,12 +36,13 @@ struct TABLE {
         union {
             struct {
                 mutable half_t last_node_id;
-                Half_t<half_t> node_links_count;
+                Half_t<half_t> nodes_count;
                 Half_t<half_t> list_position;
             };
             Hex_convertible_t<alignof(size_t)> node_code;
         };
         size_t node_size;
+        constexpr Info(auto nc, size_t s) : nodes_count(nc), node_size(s) {}
         constexpr const Info &get_Info() const { return *this; }
     };
     struct Name {
@@ -55,7 +56,7 @@ struct TABLE {
         }
         constexpr const char *get_name() const { return name; }
     };
-    struct Named_Info : Name, Info {
+    struct Named_Info : Info, Name {
         Named_Info(const Name n, const Info i) : Name(n), Info(i) {};
         Named_Info(const Named_Info &) = default;
         Named_Info(Named_Info &&) = default;
@@ -68,38 +69,35 @@ struct TABLE {
         static constexpr unsigned size = sizeof(List_t);
         void *retrieve_block(void *, unsigned long);
         void *load(const Named_Info info);
-        void unload(TABLE &);
-        List_t& tables;
+        void unload(Info **)const;
+        List_t &tables;
         HEAD();
-    } static inline head;
+        ~HEAD();
+    } static inline const head;
 };
 
 template <typename T>
-class Table : TABLE {
+struct Table : TABLE {
     struct Node {
-        static constexpr size_t Z = (MAX_OPT(base2_of(T::links_count), 2));
-        static constexpr size_t N = MAX_OPT(T::entries_count, 64);
-        mutable Node *nodes[Z];
-        T data[N];
+        static constexpr auto ENTRIES_COUNT{MAX_OPT(T::ENTRIES_COUNT, 24)};
+        static constexpr auto NODES_COUNT{MAX_OPT(base2_of(T::NODES_COUNT), 2)};
+        static constexpr auto info() { return Info{NODES_COUNT, sizeof(Node)}; }
+        mutable Node *nodes[NODES_COUNT];
+        T data[ENTRIES_COUNT];
     } *const ptr;
 
   public:
+    Table() : Table{head.load({typeid(Table).name(), Node::info()})} {}
     Table(void *ptr) : ptr{(Node *)ptr} {}
-    Table()
-        : Table{head.load({typeid(Table).name(),
-                           {.node_links_count = sizeof(Node::Z),
-                            .node_size = sizeof(Node)}})} {}
+    ~Table() { head.unload((Info **)ptr); }
 
-    // ~Table() { unload_info(*this); }
-
-    static inline constexpr unsigned long block_size() { return sizeof(Node); }
     template <typename U>
         requires(requires(U *j, size_t k) { k = *j; })
     T &operator[](U i) const noexcept {
-        static constexpr unsigned K = bsrl(Node::Z);
+        static constexpr unsigned K = bsrl(Node::NODES_COUNT);
         Node *deep = ptr;
-        unsigned r = i % Node::N, j;
-        if ((i /= Node::N) != 0) {
+        unsigned r = i % Node::ENTRIES_COUNT, j;
+        if ((i /= Node::ENTRIES_COUNT) != 0) {
             // Allocate only if needed
             // Inflate index: to avoid first frame
             j = (bsrl(i) - (bsrl(i) % K));
