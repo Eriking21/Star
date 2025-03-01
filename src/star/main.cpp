@@ -1,6 +1,7 @@
 // #pragma once
-#include "iostream"
 #include "tables.hpp"
+#include <cstdio>
+#include <iostream>
 mk_tables(Users, Movies, hot);
 
 struct Users_Format {
@@ -13,7 +14,7 @@ struct hot_Format {};
 
 struct Movies_Format {
     char d[4];
-    static constexpr auto ENTRIES_COUNT = 50ull;
+    static constexpr auto ITEMS_COUNT = 50ull;
     static constexpr auto NODES_COUNT = 4ull;
     Link<Movies, int[40], long> watched;
 
@@ -25,9 +26,10 @@ Table<hot_Format> k;
 
 // #include <typeinfo>
 int main(int, char **) {
-    std::cout << '\n'
-              << Movies.ptr->info().node_size << '\n'
-              << hot.ptr->info().node_size << '\n'
-              << Users.ptr->info().node_size << '\n'
-              << Movies.ptr->info().node_size << '\n';
+    int i = 1025, j, k, l, m;
+
+    std::cout << Movies.info().node_id.last << '\n'
+              << hot.info().node_id.last << '\n'
+              << Users.info().node_id.last << '\n'
+              << Movies.info().node_id.last << '\n';
 }

@@ -15,6 +15,8 @@
 
 #pragma once
 
+
+
 template <typename T> struct Half;
 template <typename T> using Half_t = typename Half<T>::type;
 #define HALF(TYPE)                                                             \
@@ -34,26 +36,19 @@ using half_t = Half<size_t>::type;
 #define MAX(X, Y) (X >= Y ? X : Y)
 #define bsr(N) (31 - __builtin_clz(N))
 #define bsrl(N) (63 - __builtin_clzl(N))
-#define base2_of(N) (size_t{1} << (bsrl(N) + !(N & (N - 1))))
-#define pow2(N) (size_t{1} << N)
+#define base2_of(N) (size_t{1} << (bsrl(N) + !!(N & (N - 1))))
+#define pow2(N) (size_t(1) << N)
 #define bits_of(N) (sizeof(N) * 8)
 
-template <unsigned S>
-    requires(S % 2 == 0)
-struct Hex_convertible_t {
-    static constexpr char lookup[]{0, 1, 2,   3,   4,   5,   6,   7,
-                                   8, 9, 'A', 'B', 'C', 'D', 'E', 'F'};
-    char data alignas(S)[S];
-    struct Hex {
-        char value[2 * S];
-        Hex(char (&data)[S]) {
-            for (int i = 0; i < S; i++)
-                value[i * 2] = data[i] / 4, value[i * 2 + 1] = data[i];
-        }
-    };
-    operator decltype(Hex::value) & () { return Hex(data); }
-    constexpr void insert_hex(char *begin) { *(Hex*)begin = Hex(data); }
-};
+static constexpr char Hex_list[] = {'0', '1', '2', '3', '4', '5', '6', '7',
+                                    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+template <bool revert = false, auto lookup = Hex_list, unsigned N>
+static constexpr inline void write_hex(char *where, const char (&data)[N]) {
+    for (int i = 0; i < N; i++) {
+        where[(1 - 2 * revert) * (i * 2 + 1)] = lookup[data[i] >> 4];
+        where[(1 - 2 * revert) * (i * 2 + 0)] = lookup[data[i] & 0xF];
+    }
+}
 
 #ifndef OPTIONAL
 #    define OPTIONAL(X, Y)                                                     \

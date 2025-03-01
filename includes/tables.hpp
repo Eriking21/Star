@@ -31,85 +31,103 @@ template <typename U> struct Vectorized<U &&> : Vectorized<U> {};
 #    define mk_tables(...) FOR_EACH(mk_table, __VA_ARGS__)
 #endif
 
-struct TABLE {
+struct BaseTable {
+  protected:
+    using uint_t = Half_t<half_t>;
+    static constexpr auto NAME_SIZE = 128 - sizeof(size_t) * 2;
+    static constexpr char HEX[]{'d', 'e', 'f', 'h', 'i', 'j', 'k', 'm',
+                                'n', 'o', 'p', 'u', 'v', 'w', 'x', 'y'};
     struct Info {
         union {
             struct {
-                mutable half_t last_node_id;
-                Half_t<half_t> nodes_count;
-                Half_t<half_t> list_position;
-            };
-            Hex_convertible_t<alignof(size_t)> node_code;
+                mutable uint_t last = 0;
+                uint_t position = 0;
+                uint_t mask;
+                uint_t bits;
+            } node_id;
+            char node_code[sizeof(size_t)];
         };
+
         size_t node_size;
-        constexpr Info(auto nc, size_t s) : nodes_count(nc), node_size(s) {}
-        constexpr const Info &get_Info() const { return *this; }
-    };
-    struct Name {
-        char name[128 - sizeof(Info)];
-        operator const decltype(name) & () const { return name; }
-        Name(const char *name) {
+        char name alignas(sizeof(size_t) * 2)[NAME_SIZE];
+        constexpr const char *name_cstr() const noexcept { return name; }
+        constexpr size_t count() const noexcept { return pow2(node_id.bits); }
+        constexpr bool operator==(const Info &other) const noexcept {
+            return !__builtin_memcmp(this->name, other.name, NAME_SIZE);
+        }
+        constexpr Info(auto name, size_t node_size, uint_t nodes_bits)
+            requires(requires { name[0]; })
+            : node_id{0, 0, nodes_bits, uint_t((pow2(nodes_bits))-1)},
+              node_size(node_size) {
             unsigned i = 0;
             do this->name[i] = name[i];
-            while (*name && ++i < (sizeof(this->name) - 1));
-            while (i < (sizeof(this->name) - 1)) this->name[i++] = 0;
+            while (name[i] && (++i < NAME_SIZE));
+            while (++i < (NAME_SIZE - 1)) this->name[i] = 0;
         }
-        constexpr const char *get_name() const { return name; }
     };
-    struct Named_Info : Info, Name {
-        Named_Info(const Name n, const Info i) : Name(n), Info(i) {};
-        Named_Info(const Named_Info &) = default;
-        Named_Info(Named_Info &&) = default;
-        Named_Info &operator=(const Named_Info &) = default;
-        Named_Info &operator=(Named_Info &&) = default;
-    };
+    struct Table {
+        using List_t = Info[128];
+        static constexpr size_t max_ids = size_t(1) + uint_t(-1);
+        static constexpr uint_t max_depth = (bits_of(uint_t) >> 1);
+        static constexpr uint_t size = sizeof(List_t);
 
-    struct HEAD {
-        using List_t = Named_Info[128];
-        static constexpr unsigned size = sizeof(List_t);
-        void *retrieve_block(void *, unsigned long);
-        void *load(const Named_Info info);
-        void unload(Info **)const;
+        void *const load(const Info info) const noexcept;
+
+        void unload(const void *ptr) const noexcept;
+        void unload(auto *p) const noexcept { return unload((const void *)p); };
+
+        void *const search_allocated_node(uint_t, void *) const noexcept;
+        const Info &search(Info info) const noexcept;
+
         List_t &tables;
-        HEAD();
-        ~HEAD();
-    } static inline const head;
+        Table();
+        ~Table();
+
+        typedef union Node {
+            const Info *info;
+            Node *nodes[max_ids];
+        } *NodeRoute[max_ids];
+    } static inline const table;
 };
 
-template <typename T>
-struct Table : TABLE {
-    struct Node {
-        static constexpr auto ENTRIES_COUNT{MAX_OPT(T::ENTRIES_COUNT, 24)};
-        static constexpr auto NODES_COUNT{MAX_OPT(base2_of(T::NODES_COUNT), 2)};
-        static constexpr auto info() { return Info{NODES_COUNT, sizeof(Node)}; }
-        mutable Node *nodes[NODES_COUNT];
-        T data[ENTRIES_COUNT];
+template <typename Format>
+class Table : BaseTable {
+    union Node {
+        Info *info;
+        struct {
+            Node *nodes[MAX_OPT(base2_of(Format::NODES_COUNT), 4)];
+            Format data[MAX_OPT(Format::ITEMS_COUNT, 256 - sizeof(nodes))];
+        };
+        static constexpr inline Info const_info() noexcept {
+            return {typeid(Table).name(), sizeof(Node),
+                    bsrl(sizeof(data) / sizeof(Format))};
+        }
     } *const ptr;
 
   public:
-    Table() : Table{head.load({typeid(Table).name(), Node::info()})} {}
-    Table(void *ptr) : ptr{(Node *)ptr} {}
-    ~Table() { head.unload((Info **)ptr); }
+    constexpr const Info &info() const noexcept { return ptr->info[0]; }
+    constexpr Table(void *const ptr) noexcept : ptr((Node *)ptr) {}
+    Table() noexcept : Table(table.load(Node::const_info())) {}
+    ~Table() noexcept { table.unload<Node>(ptr); }
 
-    template <typename U>
-        requires(requires(U *j, size_t k) { k = *j; })
-    T &operator[](U i) const noexcept {
-        static constexpr unsigned K = bsrl(Node::NODES_COUNT);
+    Format &operator[](auto i) const noexcept
+        requires(requires { ptr->data[i]; }) {
         Node *deep = ptr;
-        unsigned r = i % Node::ENTRIES_COUNT, j;
-        if ((i /= Node::ENTRIES_COUNT) != 0) {
-            // Allocate only if needed
-            // Inflate index: to avoid first frame
-            j = (bsrl(i) - (bsrl(i) % K));
-            i += pow2(j);
-            if constexpr (requires { i.is_allocable; })
-                deep = ((Node *)head.retrieve_block(this, i));
-            else // Travel deep nodes
-                while (deep = deep->nodes[i >> j], i &= pow2(j) - 1, j -= K);
+        auto r = i % Node::ITEMS;
+        if ((i /= Node::ITEMS) != 0) {
+            if constexpr (requires { i.is_allocable; }) {
+                deep = ((Node *)table.search_allocated_node(i, this));
+            } else {
+                uint_t pos, j = bsrl(i);
+                j -= (j & Node::const_info().node_id.mask);
+                do pos = i >> j, deep = deep->nodes[pos], i ^= (pos << j);
+                while (j -= Node::const_info().node_id.bits);
+            }
         }
         return deep->data[r];
     };
 };
+
 template <typename U> struct Table<U *> : Table<U> {};
 template <typename U> struct Table<U &> : Table<U> {};
 template <typename U> struct Table<U &&> : Table<U> {};

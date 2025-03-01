@@ -7,3 +7,8 @@ UseTab: Never
 CompactNamespaces: true
 AllowShortBlocksOnASingleLine: Always
 AllowShortLoopsOnASingleLine: true
+BreakConstructorInitializers: BeforeColon
+AllowAllConstructorInitializersOnNextLine: true
+#BreakConstructorInitializersBeforeComma: false
+AllowShortCompoundRequirementOnASingleLine: true
+RequiresClausePosition: SingleLine

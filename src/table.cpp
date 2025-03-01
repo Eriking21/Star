@@ -4,63 +4,69 @@
 // #include <stdio.h>
 #include <cstring>
 #include <fcntl.h>
-#include <iostream>
+// #include <iostream>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#define mk_mmap(FD, SIZE)                                                      \
-    mmap(0, SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, FD, 0)
+template <typename T = void>
+static inline T *mmap(const char *path, size_t size) noexcept {
 
-thread_local char path[32] = "./Table/Ref0000000000000000.bin";
-
-template <typename T>
-static inline T *mmap(const char *path, size_t size) {
-    std::cout << path;
-    int fd = open(path, O_RDWR | O_CREAT | O_TRUNC, 0660);
+    int fd = open(path, O_RDWR | O_CREAT, 0660);
     if (fd == -1) exit(1);
     if (ftruncate(fd, size) == -1) close(fd), exit(2);
-    void *map = mk_mmap(fd, size);
+    void *map = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (map == MAP_FAILED) close(fd), exit(3);
     close(fd);
-    std::cout << path << "\n";
+    //    std::cout << "DONE: " << path << "\n";
     return (T *)(map);
 }
 // do not return nullptr exits
 
-TABLE::HEAD::HEAD() : tables{*mmap<List_t>("./Tables", size)} {}
-TABLE::HEAD::~HEAD() {
-    munmap(this, size);
-    std::cout << "HEAD TERMINATED\n";
-}
+thread_local char path[32] = "./Table/TABLE.bin\0___000___.bin";
+thread_local char *path_end = &path[sizeof(path) - 6];
+BaseTable::Table::Table() : tables{*mmap<List_t>(path, size)} {}
+BaseTable::Table::~Table() { munmap(&this->tables, size); }
 
-void TABLE::HEAD::unload(Info **info) const{
-    if (info == nullptr || info[0] == nullptr) return;
-    std::cout << "done\n";
-    munmap(info, info[0][0].node_size);
-}
-
-void *TABLE::HEAD::retrieve_block(void *, unsigned long) { return nullptr; }
-
-void *TABLE::HEAD::load(Named_Info info) {
-
-    Info &table = [&]() -> Info & {
-        for (Named_Info &table : tables) {
-            std::cout << table.name << '\n';
-            if (!memcmp(table.name, info.name, sizeof(info.name))) return table;
-            else if (table.name[0] == 0) return (table = info);
-            else {
-                info.list_position++;
-                continue;
-            }
+const BaseTable::Info &BaseTable::Table::search(Info _info) const noexcept {
+    int i = 0;
+    for (Info &table : tables) {
+        if (table.name[0] == 0) return (table = _info); // store + load
+        else if (_info == table) return table;
+        else {
+            _info.node_id.position++;
+            continue;
         }
-        exit(4);
-    }();
-    // std::cout << "oi";
-    // void *ptr = mmap<void>(path, table.node_size);
-    // void *k[pow2(bits_of(table.node_links_count))];
+    }
+    exit(4);
+}
+void *const BaseTable::Table::load(Info _info) const noexcept {
+    auto &info = search(_info);
+    NodeRoute route;
+    const auto code = info.node_id;
+    const auto &[i, _, bits, mask] = code;
+    const auto node_size = info.node_size;
 
-    return nullptr;
+    uint_t last_id = i;
+    for (i = 0; i <= last_id; i++) {
+        write_hex<true,HEX>(path_end, (const char(&)[sizeof(size_t) - 1]) code);
+        route[i] = mmap<Node>(path, node_size);
+        route[i >> bits]->nodes[i & mask] = route[i];
+    }
+
+    route[0]->info = &info;
+    return route[0];
+    //    std::cout << "erim: " << route[0]->info->name << '\n';
+}
+
+void BaseTable::Table::unload(const void *deep) const noexcept {
+    const auto [last_id, position, bits, mask] = ((Info **)deep)[0][0].node_id;
+    const auto node_size = ((Info **)deep)[0][0].node_size;
+    NodeRoute route{(Node *)deep};
+    uint_t i = 0;
+    while (i < last_id) ++i, route[i] = route[i >> bits]->nodes[i & mask];
+    do { munmap(route[i], node_size); } while (i--);
+    return;
 }
