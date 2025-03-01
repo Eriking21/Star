@@ -1,21 +1,31 @@
 /**
-* @brief ERIM BASIC MACROS
-* @author Erivado Jair Xavier Mate.
-* @version 1.1
-* @date 2024.
-
-* @details
-* this header file provides a set of utility functions and metafunctions
-* that can be used to write more expressive and flexible C++ code,
-* in the context of generic programming and conditional compilation.
-* 1rd goal was compatibility with c++20, and c++17 still supported
-* 2st goal was to keep it simple and stupid without extensions
-* 3nd goal was independency, so no other header was included
-*/
+ * @file macros.hpp
+ * @version 1.1
+ * @date 2025
+ *
+ * @brief This header file provides a set of utility macros and template
+ *        metafunctions to facilitate generic programming and conditional
+ *        compilation in C++.
+ *
+ * The main components of this file are:
+ * - HALF: A macro to define a template specialization for halving types.
+ * - MAX: A macro to compute the maximum of two values.
+ * - bsr, bsrl: Macros to compute the bit scan reverse for 32-bit and 64-bit integers.
+ * - base2_of: A macro to compute the next power of two for a given number.
+ * - pow2: A macro to compute 2 raised to the power of a given number.
+ * - bits_of: A macro to compute the number of bits in a given type.
+ * - write_hex: A constexpr function template to write hexadecimal representation of data.
+ * - OPTIONAL, MAX_OPT: Macros for optional evaluation and maximum with optional fallback.
+ * - FOR_EACH: A macro to apply a given macro to each argument in a variadic list.
+ *
+ * @note The code is designed to be compatible with C++20 and does not include
+ *       any other headers to maintain independence.
+ *
+ * @copyright
+ * (C) 2025 Erivaldo Mate. All rights reserved.
+ */
 
 #pragma once
-
-
 
 template <typename T> struct Half;
 template <typename T> using Half_t = typename Half<T>::type;
@@ -73,6 +83,7 @@ static constexpr inline void write_hex(char *where, const char (&data)[N]) {
 #    else
 #        define LOOP__01(WORK, ...) WORK(__VA_ARGS__) //  cannot be empty
 #    endif
+
 #    define LOOP__02(WORK, x, ...) WORK(x) THEN LOOP__01(WORK, __VA_ARGS__)
 #    define LOOP__03(WORK, x, ...) WORK(x) THEN LOOP__02(WORK, __VA_ARGS__)
 #    define LOOP__04(WORK, x, ...) WORK(x) THEN LOOP__03(WORK, __VA_ARGS__)

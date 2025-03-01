@@ -1,8 +1,30 @@
-#pragma once
 /**
- * Copyright 2025 Erivaldo Jair Xavier Mate
- * @brief If you can't deal with performance search for "unsafe"
+ * @file tables.hpp
+ * @version 1.1
+ * @date 2025
+ *
+ * @brief This header file defines a templated Table structure for managing
+ *        collections of items with a specific format. It includes utilities
+ *        for vectorizing types, creating tables, and linking tables with
+ *        index chains.
+ *
+ * The main components of this file are:
+ * - Vectorized: A template structure to handle vectorized types.
+ * - BaseTable: A base class providing common functionalities for tables.
+ * - Table: A templated class inheriting from BaseTable, representing a
+ *          collection of items with a specific format.
+ * - Link: A template structure to link tables with index chains.
+ *
+ * The file also includes macros for creating tables and managing namespaces.
+ *
+ * @note The code uses several advanced C++ features such as constexpr,
+ *       template specialization, and type traits.
+ *
+ * @copyright
+ * (C) 2025 Erivaldo Mate. All rights reserved.
  **/
+ 
+#pragma once
 #include "macros.hpp"
 #include <typeinfo>
 #ifdef ERIM_TABLE_NAMESPACE
@@ -50,8 +72,6 @@ struct BaseTable {
 
         size_t node_size;
         char name alignas(sizeof(size_t) * 2)[NAME_SIZE];
-        constexpr const char *name_cstr() const noexcept { return name; }
-        constexpr size_t count() const noexcept { return pow2(node_id.bits); }
         constexpr bool operator==(const Info &other) const noexcept {
             return !__builtin_memcmp(this->name, other.name, NAME_SIZE);
         }
@@ -66,10 +86,10 @@ struct BaseTable {
         }
     };
     struct Table {
+        Table();
+        ~Table();
         using List_t = Info[128];
-        static constexpr size_t max_ids = size_t(1) + uint_t(-1);
-        static constexpr uint_t max_depth = (bits_of(uint_t) >> 1);
-        static constexpr uint_t size = sizeof(List_t);
+        List_t &tables;
 
         void *const load(const Info info) const noexcept;
 
@@ -79,9 +99,9 @@ struct BaseTable {
         void *const search_allocated_node(uint_t, void *) const noexcept;
         const Info &search(Info info) const noexcept;
 
-        List_t &tables;
-        Table();
-        ~Table();
+        static constexpr size_t max_ids = size_t(1) + uint_t(-1);
+        static constexpr uint_t max_depth = (bits_of(uint_t) >> 1);
+        static constexpr uint_t size = sizeof(List_t);
 
         typedef union Node {
             const Info *info;
